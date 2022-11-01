@@ -1,8 +1,18 @@
 from itertools import product
 
-ROW_COUNT, COL_COUNT = 9, 9
-EMPTY_CELL = 0
-NUM_RANGE = range(1, 10)
+PUZZLE_SIZE = 9
+BOX_SIZE = 3
+
+ROW_COUNT, COL_COUNT = PUZZLE_SIZE, PUZZLE_SIZE
+BOX_ROW_COUNT, BOX_COL_COUNT = BOX_SIZE, BOX_SIZE
+EMPTY_CELL = 0  # value indicating empty cell
+NUM_RANGE = range(1, 10)  # range of values in a cell 1-9
+
+# some assertions
+assert ROW_COUNT == COL_COUNT, f'Puzzle must be square! {ROW_COUNT} != {COL_COUNT}'
+assert BOX_ROW_COUNT == BOX_COL_COUNT, f'Box must be square! {BOX_ROW_COUNT} != {BOX_COL_COUNT}'
+assert PUZZLE_SIZE % BOX_SIZE == 0, f'Puzzle size must be multiple of box size!'
+assert EMPTY_CELL not in NUM_RANGE, f'Empty cell value must not be in number range! {EMPTY_CELL} not in {NUM_RANGE}'
 
 
 def print_sudoku(puzzle: list):
@@ -22,15 +32,17 @@ def solve_sudoku(puzzle: list) -> list:
 
     print(f'Starting with {empty_cell_count} empty cells')
 
-    puzzle_iters = 0
+    puzzle_iter_count = 0
 
     while empty_cell_count != 0:
-        puzzle_iters += 1
+        puzzle_iter_count += 1
+        print(f'{puzzle_iter_count}. Puzzle Iteration')
+
         # iterate over all cells in puzzle
         for row, col in product(range(ROW_COUNT), range(COL_COUNT)):
             # if cell empty, try finding if a unique match can be found
             if puzzle[row][col] == EMPTY_CELL:
-                square = (row // 3) * 3 + col // 3
+                square = (row // BOX_SIZE) * BOX_SIZE + col // BOX_SIZE
                 # make list of numbers that are in all three lists, i.e. that are missing in rows, cols and square
                 match_num_list = [num for num in NUM_RANGE if
                                   num in missing_row_list[row] and num in missing_col_list[col] and num in
@@ -47,11 +59,11 @@ def solve_sudoku(puzzle: list) -> list:
                     missing_col_list[col].remove(add_num)
                     missing_square_list[square].remove(add_num)
                     print(
-                        f'{puzzle_iters}. Added missing number {add_num} at puzzle[{row}][{col}] - {empty_cell_count} remaining empty cells')
+                        f'Added missing number {add_num} at puzzle[{row}][{col}] - {empty_cell_count} remaining empty cells')
 
     assert empty_cell_count == 0, f'{empty_cell_count} empty cells remaining'
 
-    print(f'Sudoku solution found: {puzzle_iters} puzzle iterations required')
+    print(f'Sudoku solution found: {puzzle_iter_count} puzzle iterations required')
     return puzzle
 
 
@@ -68,7 +80,7 @@ def is_sudoku_done(puzzle: list) -> bool:
             return False
 
     # additional (redundant) check for empty cells
-    assert count_number(puzzle, EMPTY_CELL) != 0, 'Found empty cells in a finished Sudoku!'
+    assert count_number(puzzle, EMPTY_CELL) == 0, 'Found empty cells in a finished Sudoku!'
 
     return True
 
@@ -81,6 +93,14 @@ def count_number(puzzle: list, num: int) -> int:
 
 
 def get_row_list(puzzle: list) -> list:
+    """Compile and return list of missing number for each row
+
+    Args:
+        puzzle (list[list]): Sudoku puzzle as a list of 9 rows with 9 numbers each
+
+    Returns:
+        list[list]: One list per row each contains numbers that are missing from range 1 to 9
+    """
     missing_row_list = list()
 
     for row in puzzle:
@@ -92,6 +112,14 @@ def get_row_list(puzzle: list) -> list:
 
 
 def get_col_list(puzzle: list) -> list:
+    """Compile and return list of missing number for each column
+
+    Args:
+        puzzle (list[list]): Sudoku puzzle as a list of 9 rows with 9 numbers each
+
+    Returns:
+        list[list]: One list per column each contains numbers that are missing from range 1 to 9
+    """
     missing_col_list = list()
 
     for col_num in range(9):
@@ -105,13 +133,21 @@ def get_col_list(puzzle: list) -> list:
 
 
 def get_square_list(puzzle: list) -> list:
+    """Compile and return list of missing number for each 3x3 square
+
+    Args:
+        puzzle (list[list]): Sudoku puzzle as a list of 9 rows with 9 numbers each
+
+    Returns:
+        list[list]: One list per square each contains numbers that are missing from range 1 to 9
+    """
     missing_square_list = list()
 
-    for square_num in range(9):
+    for square_num in range(PUZZLE_SIZE ** 2 // BOX_SIZE ** 2):
         square = list()
         # create a list for all numbers in a quadrant
-        for row in range(3 * (square_num // 3), 3 * (square_num // 3) + 3):
-            for col in range(3 * (square_num % 3), 3 * (square_num % 3) + 3):
+        for row in range(BOX_SIZE * (square_num // BOX_SIZE), BOX_SIZE * (square_num // BOX_SIZE) + BOX_SIZE):
+            for col in range(BOX_SIZE * (square_num % BOX_SIZE), BOX_SIZE * (square_num % BOX_SIZE) + BOX_SIZE):
                 # print(f'puzzle[{row}][{col}] = {puzzle[row][col]}')
                 square.append(puzzle[row][col])
 
