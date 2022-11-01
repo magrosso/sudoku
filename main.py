@@ -20,16 +20,18 @@ def solve_sudoku(puzzle: list) -> list:
     total_count = ROW_COUNT * COL_COUNT
     ratio = empty_cell_count / total_count
 
+    print(f'Starting with {empty_cell_count} empty cells')
+
     puzzle_iters = 0
 
-    while empty_cell_count > 0:
+    while empty_cell_count != 0:
         puzzle_iters += 1
         # iterate over all cells in puzzle
         for row, col in product(range(ROW_COUNT), range(COL_COUNT)):
             # if cell empty, try finding if a unique match can be found
             if puzzle[row][col] == EMPTY_CELL:
                 square = (row // 3) * 3 + col // 3
-                # get list of numbers that are missing in rows, cols and square
+                # make list of numbers that are in all three lists, i.e. that are missing in rows, cols and square
                 match_num_list = [num for num in NUM_RANGE if
                                   num in missing_row_list[row] and num in missing_col_list[col] and num in
                                   missing_square_list[square]]
@@ -40,15 +42,35 @@ def solve_sudoku(puzzle: list) -> list:
                     assert add_num != EMPTY_CELL, 'Cannot add {EMPTY_CELL} to cell'
                     puzzle[row][col] = add_num
                     empty_cell_count -= 1
-                    print(f'Added missing number {add_num} at puzzle[{row}][{col}] - {empty_cell_count} more missing')
                     # update lists
                     missing_row_list[row].remove(add_num)
                     missing_col_list[col].remove(add_num)
                     missing_square_list[square].remove(add_num)
+                    print(
+                        f'{puzzle_iters}. Added missing number {add_num} at puzzle[{row}][{col}] - {empty_cell_count} remaining empty cells')
 
     assert empty_cell_count == 0, f'{empty_cell_count} empty cells remaining'
-    print(f'Solution found: {puzzle_iters} puzzle iterations required')
+
+    print(f'Sudoku solution found: {puzzle_iters} puzzle iterations required')
     return puzzle
+
+
+def is_sudoku_done(puzzle: list) -> bool:
+    # rows, cols and square lists of missing numbers must be empty for a Sudoku to be done
+    for row in get_row_list(puzzle):
+        if row:
+            return False
+    for col in get_col_list(puzzle):
+        if col:
+            return False
+    for square in get_square_list(puzzle):
+        if square:
+            return False
+
+    # additional (redundant) check for empty cells
+    assert count_number(puzzle, EMPTY_CELL) != 0, 'Found empty cells in a finished Sudoku!'
+
+    return True
 
 
 def count_number(puzzle: list, num: int) -> int:
@@ -58,7 +80,7 @@ def count_number(puzzle: list, num: int) -> int:
     return count
 
 
-def get_row_list(puzzle) -> list:
+def get_row_list(puzzle: list) -> list:
     missing_row_list = list()
 
     for row in puzzle:
@@ -69,7 +91,7 @@ def get_row_list(puzzle) -> list:
     return missing_row_list
 
 
-def get_col_list(puzzle) -> list:
+def get_col_list(puzzle: list) -> list:
     missing_col_list = list()
 
     for col_num in range(9):
@@ -82,7 +104,7 @@ def get_col_list(puzzle) -> list:
     return missing_col_list
 
 
-def get_square_list(puzzle) -> list:
+def get_square_list(puzzle: list) -> list:
     missing_square_list = list()
 
     for square_num in range(9):
@@ -119,7 +141,12 @@ def main():
               [0, 0, 0, 0, 8, 0, 0, 7, 9]]
 
     print_sudoku(puzzle)
+    if not is_sudoku_done(puzzle):
+        print(f'Sudoku is not done')
+
     solution = solve_sudoku(puzzle)
+    if is_sudoku_done(solution):
+        print(f'Sudoku is done')
     print_sudoku(solution)
 
 
